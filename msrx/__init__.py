@@ -179,15 +179,15 @@ class MSRX(object):
     Read all tracks
     '''
     tracks = [b''] * _TRACK_CNT
-    self._send(b'\x1bm')
+    self._send(b'\x1br') #1bm is RAW, 1br is ASCII
     self._expect(b'\x1bs')
     for t in range(_TRACK_CNT):
       self._expect(b'\x1b' + to_byte(t + 1))
       tracks[t] = b''.join(
         # Some bit hackery to reverse the bits - we shouldn't need this
         # but the hardware works in mysterious ways.
-        to_byte((((ord(c) * 0x80200802)
-                & 0x0884422110) * 0x0101010101 >> 32) & 255)
+        #to_byte((((ord(c) * 0x80200802)
+        #        & 0x0884422110) * 0x0101010101 >> 32) & 255)
         for c in biter(self._dev.read(ord(self._dev.read(1))))
       )
     self._expect(b'?\x1c')
@@ -200,7 +200,7 @@ class MSRX(object):
     tracks: tuple of three byte strings, each data for the corresponding
             track. To preserve a track, pass empty byte string.
     '''
-    self._send(b'\x1bn\x1bs')
+    self._send(b'\x1bw\x1bs') #1bn is RAW, 1bw is ASCII
     for t, i in zip(tracks, range(_TRACK_CNT)):
       self._send(b'\x1b' + to_byte(i + 1) + to_byte(len(t)) + t)
     self._send(b'?\x1c')
